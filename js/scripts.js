@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const apiUrl = 'http://localhost:3000';
+    const apiUrl = 'http://127.0.0.1:8000/';
 
     document.getElementById('loginForm')?.addEventListener('submit', function(event) {
         event.preventDefault();

@@ -27,10 +27,6 @@ h2 {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-@font-face {
-    font-family: 'Inter1';
-    src: url('https://fonts.google.com/specimen/Inter');
-}
 
 *{
     margin: 0;
