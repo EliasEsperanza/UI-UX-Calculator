@@ -26,3 +26,124 @@ h2 {
     border-radius: 5px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
+
+@font-face {
+    font-family: 'Inter1';
+    src: url('https://fonts.google.com/specimen/Inter');
+}
+
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html{
+    height: 100%;
+}
+
+body{
+    min-width: 100%;
+    font-size: 1.2rem;
+    font-family: 'Inter1', sans-serif;
+    padding-left: 100px;
+    padding-right: 100px;
+    background-color: hsl(36, 100%, 99%);
+}
+
+.grid-container > *{
+    box-shadow: -1px 1px 7px 0px rgba(0,0,0,0.75);
+    border-radius: 4px;
+    padding: 10px;
+    text-align: center; 
+}
+
+p{
+    font-size: 15px;
+}
+
+.grid-container{
+    display: grid;
+    gap: 10px;
+    grid-template:
+    "header header header"
+    "article article article"
+    "footer footer footer" 50px;
+}
+
+.header{
+    grid-area: header;
+    padding-top: 15px;
+    background-color: hsl(36, 100%, 99%);
+    display: grid;
+}
+
+.header nav{
+    display: flex;
+    gap: 25px;
+    align-items: center;
+    justify-content: flex-end;
+    margin: auto;
+}
+
+
+#logo{
+    width:60px;
+    height: 50px;
+}
+
+.aside{
+    grid-area: aside;
+    background-color: hsl(240, 100%, 5%);
+    width: 370px;
+    text-align: justify;
+    padding: 30px;
+}
+
+.article{
+    padding-top: 20px;
+    grid-area: article;
+    background-color:hsl(36, 100%, 99%);
+    gap: 20px;
+    display: grid;
+    grid-template:
+    "imgPrincipal imgPrincipal aside"
+    "section section aside" 
+    "section section aside";
+}
+
+.section{
+    grid-area: section;
+    background-color: hsl(36, 100%, 99%);
+    height: 200px;
+    width: 100%;
+    display: grid;
+    grid-template-areas: 
+    "textPrincipal textSecundario "
+    "textPrincipal textSecundario"
+    ". botonPrincipal";
+    text-align: left;
+
+}
+
+#textPrincipal{
+    max-width: 300px;
+    font-size: 50px;
+    grid-area: textPrincipal;
+}
+
+#textSecundario{
+    margin: auto;
+    margin-left: 300px;
+    grid-area: textSecundario;
+}
+
+#botonPrincipal{
+    grid-area: botonPrincipal;
+
+}
+
+#imgPrincipal{
+    grid-area: imgPrincipal;
+    width: 100%;
+}
