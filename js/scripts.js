@@ -44,6 +44,11 @@ document.addEventListener('DOMContentLoaded', function() {
         axios.post(`${apiUrl}/metodos/hermite/`, { x_values, y_values, derivatives })
             .then(response => {
                 document.getElementById('hermiteResult').textContent = JSON.stringify(response.data);
+                const exampleModal = new bootstrap.Modal(document.getElementById('exampleModal'));
+                exampleModal.show();
+            })
+            .catch(error => {
+                console.error('There was an error!', error);
             });
     });
 
@@ -59,11 +64,14 @@ document.addEventListener('DOMContentLoaded', function() {
         axios.post(`${apiUrl}/metodos/runge_kutta/`, { function: func, initialValue, startTime, endTime, stepSize })
             .then(response => {
                 document.getElementById('rungeKuttaResult').textContent = JSON.stringify(response.data.result);
+                const exampleModal = new bootstrap.Modal(document.getElementById('exampleModal'));
+                exampleModal.show();
             });
     });
 
     if (window.location.pathname.endsWith('history.html')) {
         const token = localStorage.getItem('token');
+        
         if (token) {
             axios.get(`${apiUrl}/metodos/get_history/`, {
                 headers: { 'Authorization': `Token ${token}` }
@@ -79,4 +87,52 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('historyList').textContent = 'Please log in to view your history';
         }
     }
+
+    document.getElementById('GuardaCambios').addEventListener('click',function(){
+        const token = localStorage.getItem('token');
+        
+
+        
+        if(token){
+            if(document.getElementById('x_values'), document.getElementById('y_values'), document.getElementById('derivatives')){
+                const x_values = document.getElementById('x_values').value.split(',').map(Number);
+                const y_values = document.getElementById('y_values').value.split(',').map(Number);
+                const derivatives = document.getElementById('derivatives').value.split(',').map(Number);
+                const result1 = document.getElementById('hermiteResult').textContent;
+                axios.post(`${apiUrl}/metodos/save_history/`,{
+                    method: "hermite",
+                    input_data: {
+                        x_values: x_values,
+                        y_values: y_values,
+                        derivatives: derivatives
+                    },
+                    result: result1
+                }, {
+                    headers: { 'Authorization': `Token ${token}` }
+                }).then(response => {
+                    const exampleModal = bootstrap.Modal.getInstance(document.getElementById('exampleModal'));
+                    exampleModal.hide();
+                }).catch(error => {
+                    console.error('Error al guardar los cambios:', error);
+                });
+            }
+            else
+            {
+                const func = document.getElementById('function').value;
+                const initialValue = parseFloat(document.getElementById('initialValue').value);
+                const startTime = parseFloat(document.getElementById('startTime').value);
+                const endTime = parseFloat(document.getElementById('endTime').value);
+                const stepSize = parseFloat(document.getElementById('stepSize').value);
+                const result2 = document.getElementById('rungeKuttaResult').textContent;
+                //arregla la manera en que lo envias a la api
+                axios.post(`${apiUrl}/metodos/save_history/`, { method: "runge_kutta", input_data:{function: func, initialValue, startTime, endTime, stepSize}, result: result2 }, {
+                    headers: { 'Authorization': `Token ${token}` }}).then(response => {
+                        const exampleModal = bootstrap.Modal.getInstance(document.getElementById('exampleModal'));
+                        exampleModal.hide();
+                    }).catch(error => {
+                        console.error('Error al guardar los cambios:', error);
+                    });
+            }
+        }
+    });
 });
