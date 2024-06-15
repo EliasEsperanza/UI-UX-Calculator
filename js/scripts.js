@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('historyList').innerHTML = historyHtml;
             });
         } else {
-            document.getElementById('historyList').textContent = 'Please log in to view your history';
+            document.getElementById('historyList').textContent = 'Inicia sesion para ver tu historial';
         }
     }
 
