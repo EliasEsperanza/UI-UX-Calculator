@@ -79,14 +79,27 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => {
                 let historyHtml = '';
                 response.data.forEach(item => {
-                    historyHtml += `<div><strong>Method:</strong> ${item.method} <br> <strong>Input:</strong> ${JSON.stringify(item.input_data)} <br> <strong>Result:</strong> ${JSON.stringify(item.result)} <br> <strong>Timestamp:</strong> ${item.timestamp}</div><hr>`;
+                    const formattedDate = moment(item.timestamp).format('YYYY-MM-DD HH:mm:ss');
+        
+                    const formattedResult = JSON.stringify(item.result, null, 2);
+                    
+                    historyHtml += `<div>
+                        <strong>Método:</strong> ${item.method} <br> 
+                        <strong>Entrada:</strong> ${JSON.stringify(item.input_data, null, 2)} <br> 
+                        <strong>Resultado:</strong> <pre>${formattedResult}</pre> <br> 
+                        <strong>Fecha:</strong> ${formattedDate}
+                    </div><hr>`;
                 });
                 document.getElementById('historyList').innerHTML = historyHtml;
+            })
+            .catch(error => {
+                console.error('Error al obtener el historial:', error);
             });
         } else {
-            document.getElementById('historyList').textContent = 'Inicia sesion para ver tu historial';
+            document.getElementById('historyList').textContent = 'Inicia sesión para ver tu historial';
         }
     }
+    
 
     document.getElementById('GuardaCambios').addEventListener('click',function(){
         const token = localStorage.getItem('token');
@@ -124,7 +137,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const endTime = parseFloat(document.getElementById('endTime').value);
                 const stepSize = parseFloat(document.getElementById('stepSize').value);
                 const result2 = document.getElementById('rungeKuttaResult').textContent;
-                //arregla la manera en que lo envias a la api
+                
                 axios.post(`${apiUrl}/metodos/save_history/`, { method: "runge_kutta", input_data:{function: func, initialValue, startTime, endTime, stepSize}, result: result2 }, {
                     headers: { 'Authorization': `Token ${token}` }}).then(response => {
                         const exampleModal = bootstrap.Modal.getInstance(document.getElementById('exampleModal'));
