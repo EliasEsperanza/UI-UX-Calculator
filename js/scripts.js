@@ -75,6 +75,35 @@ document.addEventListener('DOMContentLoaded', function() {
                     `;
                 }
 
+                // Show plot if user is authenticated
+                if (response.data.plot_data) {
+                    const plotData = response.data.plot_data;
+                    const ctx = document.getElementById('hermiteChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: plotData.x,
+                            datasets: [{
+                                label: 'Hermite Interpolation',
+                                data: plotData.y,
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 1,
+                                fill: false
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                x: {
+                                    type: 'linear',
+                                    position: 'bottom'
+                                }
+                            }
+                        }
+                    });
+                    document.getElementById('hermiteChart').style.display = 'block';
+                }
+
                 const exampleModal = new bootstrap.Modal(document.getElementById('exampleModal'));
                 exampleModal.show();
             })
@@ -125,6 +154,35 @@ document.addEventListener('DOMContentLoaded', function() {
                     `;
                 }
 
+                // Show plot if user is authenticated
+                if (response.data.plot_data) {
+                    const plotData = response.data.plot_data;
+                    const ctx = document.getElementById('rungeKuttaChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: plotData.x,
+                            datasets: [{
+                                label: 'Runge-Kutta',
+                                data: plotData.y,
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 1,
+                                fill: false
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                x: {
+                                    type: 'linear',
+                                    position: 'bottom'
+                                }
+                            }
+                        }
+                    });
+                    document.getElementById('rungeKuttaChart').style.display = 'block';
+                }
+
                 const exampleModal = new bootstrap.Modal(document.getElementById('exampleModal'));
                 exampleModal.show();
             })
@@ -142,14 +200,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 let historyHtml = '';
                 response.data.forEach(item => {
                     const formattedDate = moment(item.timestamp).format('YYYY-MM-DD HH:mm:ss');
-                    const formattedResult = JSON.stringify(item.result, null, 2);
-                    
-                    historyHtml += `<div>
-                        <strong>Método:</strong> ${item.method} <br> 
-                        <strong>Entrada:</strong> ${JSON.stringify(item.input_data, null, 2)} <br> 
-                        <strong>Resultado:</strong> <pre>${formattedResult}</pre> <br> 
-                        <strong>Fecha:</strong> ${formattedDate}
-                    </div><hr>`;
+                    const formattedInput = JSON.stringify(item.input_data, null, 2)
+                        .replace(/\\n/g, '\n')
+                        .replace(/\\"/g, '"');
+
+                    const formattedResult = item.result
+                        .replace(/\\n/g, '\n')
+                        .replace(/\\"/g, '"')
+                        .replace(/ {4,}/g, '') // Remove excessive spaces
+                        .trim();
+
+                    historyHtml += `
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">${item.method}</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">Fecha: ${formattedDate}</h6>
+                            <p class="card-text"><strong>Entrada:</strong></p>
+                            <p>${formattedInput}</p>
+                            <p class="card-text"><strong>Resultado:</strong></p>
+                            <pre>${formattedResult}</pre>
+                        </div>
+                    </div>`;
                 });
                 document.getElementById('historyList').innerHTML = historyHtml;
             })
@@ -167,7 +238,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const x_values = document.getElementById('x_values').value.split(',').map(Number);
                 const y_values = document.getElementById('y_values').value.split(',').map(Number);
                 const derivatives = document.getElementById('derivatives').value.split(',').map(Number);
-                const result1 = document.getElementById('hermiteResult').textContent;
+                const result1 = document.getElementById('hermiteResult').innerHTML;
 
                 axios.post(`${apiUrl}/metodos/save_history/`, {
                     method: "hermite",
@@ -191,7 +262,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const startTime = parseFloat(document.getElementById('startTime').value);
                 const endTime = parseFloat(document.getElementById('endTime').value);
                 const stepSize = parseFloat(document.getElementById('stepSize').value);
-                const result2 = document.getElementById('rungeKuttaResult').textContent;
+                const result2 = document.getElementById('rungeKuttaResult').innerHTML;
 
                 axios.post(`${apiUrl}/metodos/save_history/`, {
                     method: "runge_kutta",
@@ -214,5 +285,4 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
-
 });
