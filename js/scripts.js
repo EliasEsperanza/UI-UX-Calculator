@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
     const apiUrl = 'http://127.0.0.1:8000/';
+    const token = localStorage.getItem('token');
 
     document.getElementById('loginForm')?.addEventListener('submit', function(event) {
         event.preventDefault();
@@ -16,7 +17,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('loginError').style.display = 'block';
             });
     });
-
 
     document.getElementById('registerForm')?.addEventListener('submit', function(event) {
         event.preventDefault();
@@ -41,9 +41,40 @@ document.addEventListener('DOMContentLoaded', function() {
         const y_values = document.getElementById('y_values').value.split(',').map(Number);
         const derivatives = document.getElementById('derivatives').value.split(',').map(Number);
 
-        axios.post(`${apiUrl}/metodos/hermite/`, { x_values, y_values, derivatives })
+        const headers = token ? { 'Authorization': `Token ${token}` } : {};
+
+        axios.post(`${apiUrl}/metodos/hermite/`, { x_values, y_values, derivatives }, { headers })
             .then(response => {
-                document.getElementById('hermiteResult').textContent = JSON.stringify(response.data);
+                const resultDiv = document.getElementById('hermiteResult');
+                resultDiv.innerHTML = `
+                    <h5>Puntos de interpolación (z):</h5>
+                    <p>${response.data["Puntos de interpolacion (z)"].join(', ')}</p>
+                    <h5>Tabla de diferencias divididas (q):</h5>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                ${Object.keys(response.data["Tabla de diferencias divididas (q)"][0]).map(q => `<th>${q}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${response.data["Tabla de diferencias divididas (q)"].map(row => `
+                                <tr>
+                                    ${Object.values(row).map(value => `<td>${value}</td>`).join('')}
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+
+                if (response.data["Pasos del calculo"]) {
+                    resultDiv.innerHTML += `
+                        <h5>Pasos del cálculo:</h5>
+                        <ul>
+                            ${response.data["Pasos del calculo"].map(step => `<li>${step}</li>`).join('')}
+                        </ul>
+                    `;
+                }
+
                 const exampleModal = new bootstrap.Modal(document.getElementById('exampleModal'));
                 exampleModal.show();
             })
@@ -52,7 +83,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     });
 
-    // Runge-Kutta Method
     document.getElementById('rungeKuttaForm')?.addEventListener('submit', function(event) {
         event.preventDefault();
         const func = document.getElementById('function').value;
@@ -61,17 +91,49 @@ document.addEventListener('DOMContentLoaded', function() {
         const endTime = parseFloat(document.getElementById('endTime').value);
         const stepSize = parseFloat(document.getElementById('stepSize').value);
 
-        axios.post(`${apiUrl}/metodos/runge_kutta/`, { function: func, initialValue, startTime, endTime, stepSize })
+        const headers = token ? { 'Authorization': `Token ${token}` } : {};
+
+        axios.post(`${apiUrl}/metodos/runge_kutta/`, { function: func, initialValue, startTime, endTime, stepSize }, { headers })
             .then(response => {
-                document.getElementById('rungeKuttaResult').textContent = JSON.stringify(response.data.result);
+                const resultDiv = document.getElementById('rungeKuttaResult');
+                resultDiv.innerHTML = `
+                    <h5>Resultados:</h5>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>x</th>
+                                <th>y</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${response.data.result.map(point => `
+                                <tr>
+                                    <td>${point.x}</td>
+                                    <td>${point.y}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+
+                if (response.data.steps) {
+                    resultDiv.innerHTML += `
+                        <h5>Pasos del cálculo:</h5>
+                        <ul>
+                            ${response.data.steps.map(step => `<li>${step}</li>`).join('')}
+                        </ul>
+                    `;
+                }
+
                 const exampleModal = new bootstrap.Modal(document.getElementById('exampleModal'));
                 exampleModal.show();
+            })
+            .catch(error => {
+                console.error('There was an error!', error);
             });
     });
 
     if (window.location.pathname.endsWith('history.html')) {
-        const token = localStorage.getItem('token');
-        
         if (token) {
             axios.get(`${apiUrl}/metodos/get_history/`, {
                 headers: { 'Authorization': `Token ${token}` }
@@ -80,7 +142,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 let historyHtml = '';
                 response.data.forEach(item => {
                     const formattedDate = moment(item.timestamp).format('YYYY-MM-DD HH:mm:ss');
-        
                     const formattedResult = JSON.stringify(item.result, null, 2);
                     
                     historyHtml += `<div>
@@ -99,20 +160,16 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('historyList').textContent = 'Inicia sesión para ver tu historial';
         }
     }
-    
 
-    document.getElementById('GuardaCambios').addEventListener('click',function(){
-        const token = localStorage.getItem('token');
-        
-
-        
-        if(token){
-            if(document.getElementById('x_values'), document.getElementById('y_values'), document.getElementById('derivatives')){
+    document.getElementById('GuardaCambios').addEventListener('click', function() {
+        if (token) {
+            if (document.getElementById('x_values') && document.getElementById('y_values') && document.getElementById('derivatives')) {
                 const x_values = document.getElementById('x_values').value.split(',').map(Number);
                 const y_values = document.getElementById('y_values').value.split(',').map(Number);
                 const derivatives = document.getElementById('derivatives').value.split(',').map(Number);
                 const result1 = document.getElementById('hermiteResult').textContent;
-                axios.post(`${apiUrl}/metodos/save_history/`,{
+
+                axios.post(`${apiUrl}/metodos/save_history/`, {
                     method: "hermite",
                     input_data: {
                         x_values: x_values,
@@ -128,23 +185,32 @@ document.addEventListener('DOMContentLoaded', function() {
                 }).catch(error => {
                     console.error('Error al guardar los cambios:', error);
                 });
-            }
-            else
-            {
+            } else {
                 const func = document.getElementById('function').value;
                 const initialValue = parseFloat(document.getElementById('initialValue').value);
                 const startTime = parseFloat(document.getElementById('startTime').value);
                 const endTime = parseFloat(document.getElementById('endTime').value);
                 const stepSize = parseFloat(document.getElementById('stepSize').value);
                 const result2 = document.getElementById('rungeKuttaResult').textContent;
-                
-                axios.post(`${apiUrl}/metodos/save_history/`, { method: "runge_kutta", input_data:{function: func, initialValue, startTime, endTime, stepSize}, result: result2 }, {
-                    headers: { 'Authorization': `Token ${token}` }}).then(response => {
-                        const exampleModal = bootstrap.Modal.getInstance(document.getElementById('exampleModal'));
-                        exampleModal.hide();
-                    }).catch(error => {
-                        console.error('Error al guardar los cambios:', error);
-                    });
+
+                axios.post(`${apiUrl}/metodos/save_history/`, {
+                    method: "runge_kutta",
+                    input_data: {
+                        function: func,
+                        initialValue: initialValue,
+                        startTime: startTime,
+                        endTime: endTime,
+                        stepSize: stepSize
+                    },
+                    result: result2
+                }, {
+                    headers: { 'Authorization': `Token ${token}` }
+                }).then(response => {
+                    const exampleModal = bootstrap.Modal.getInstance(document.getElementById('exampleModal'));
+                    exampleModal.hide();
+                }).catch(error => {
+                    console.error('Error al guardar los cambios:', error);
+                });
             }
         }
     });
